@@ -320,12 +320,16 @@ void HatchDetectorApp::matchTemplates(const cv::Mat &gray_image, cv::Mat &displa
         float right_depth = std::sqrt(right_3D.x * right_3D.x + right_3D.y * right_3D.y + right_3D.z * right_3D.z);
         std::cout << "Left Midpoint Depth: " << left_depth << " m" << std::endl;
         std::cout << "Right Midpoint Depth: " << right_depth << " m" << std::endl;
+        std::cout << "Centroid 3D: [" << center_3D.x << ", " << center_3D.y << ", " << center_3D.z << "]" << std::endl;
 
-        char left_text[64], right_text[64];
+        char left_text[64], right_text[64], center_text[128];
         snprintf(left_text, sizeof(left_text), "Left Z: %.3f", left_3D.z);
         snprintf(right_text, sizeof(right_text), "Right Z: %.3f", right_3D.z);
+        snprintf(center_text, sizeof(center_text), "C[%.2f, %.2f, %.2f]", center_3D.x, center_3D.y, center_3D.z);
+
         cv::putText(display_image, left_text, left_mid + cv::Point2f(10, -10), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0), 1);
         cv::putText(display_image, right_text, right_mid + cv::Point2f(10, -10), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0), 1);
+        cv::putText(display_image, center_text, 0.5f * (left_mid + right_mid) + cv::Point2f(10, 15), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 255), 1);
 
         /**************************************************************/
 
