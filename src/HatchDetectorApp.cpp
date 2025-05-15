@@ -333,13 +333,13 @@ void HatchDetectorApp::matchTemplates(const cv::Mat &gray_image, cv::Mat &displa
 
         /**************************************************************/
 
-        // Compute orientation from 3D shape
-        cv::Rect bbox = cv::boundingRect(projected);
-        auto valid3D = extract3DPoints(point_cloud, bbox);
-        cv::Point3d tmpCentroid;
+        // Compute orientation from border edges only
+        auto edge3D = extractBorder3DPoints(point_cloud, projected);
+        cv::Point3d tmp_centroid;
         cv::Vec3d euler;
         cv::Mat eigen;
-        if (computePCAOrientation(valid3D, tmpCentroid, euler, &eigen))
+
+        if (computePCAOrientation(edge3D, tmpCentroid, euler, &eigen))
         {
             applyTemporalSmoothing(center_3D, euler);
             {
@@ -348,7 +348,7 @@ void HatchDetectorApp::matchTemplates(const cv::Mat &gray_image, cv::Mat &displa
                 latest_orientation = euler;
             }
             draw3DAxes(display_image, center_3D, eigen);
-            drawPoseText(display_image, bbox, center_3D, euler);
+            drawPoseText(display_image, cv::boundingRect(projected), center_3D, euler);
         }
         best_match_count = good.size();
         matched_template_name = "Template " + std::to_string(i + 1);
