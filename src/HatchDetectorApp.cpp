@@ -339,7 +339,7 @@ void HatchDetectorApp::matchTemplates(const cv::Mat &gray_image, cv::Mat &displa
         cv::Vec3d euler;
         cv::Mat eigen;
 
-        if (computePCAOrientation(edge3D, tmpCentroid, euler, &eigen))
+        if (computePCAOrientation(edge3D, tmp_centroid, euler, &eigen))
         {
             applyTemporalSmoothing(center_3D, euler);
             {
