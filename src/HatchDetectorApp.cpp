@@ -43,10 +43,13 @@ int computeChecksum(const std::string &body)
 
 // Starts a background TCP client that connects to a FANUC server.
 // When the server sends 0x0001, the latest 6D pose is sent back as comma-separated ASCII.
-void startTCPClient() {
-    while (true) {
+void startTCPClient()
+{
+    while (true)
+    {
         int sock = socket(AF_INET, SOCK_STREAM, 0);
-        if (sock < 0) {
+        if (sock < 0)
+        {
             std::cerr << "Socket creation failed" << std::endl;
             sleep(2);
             continue;
@@ -58,7 +61,8 @@ void startTCPClient() {
         inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr);
 
         std::cout << "Attempting to connect to FANUC..." << std::endl;
-        if (connect(sock, (sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+        if (connect(sock, (sockaddr *)&server_addr, sizeof(server_addr)) < 0)
+        {
             std::cerr << "Connection failed. Retrying..." << std::endl;
             close(sock);
             sleep(2);
@@ -69,14 +73,16 @@ void startTCPClient() {
 
         char recv_buffer[10] = {};
         int n = recv(sock, recv_buffer, 10, 0);
-        if (n <= 0) {
+        if (n <= 0)
+        {
             std::cerr << "Did not receive ping." << std::endl;
             close(sock);
             continue;
         }
 
         std::string ping(recv_buffer, n);
-        if (ping.find("SEND DATA") == std::string::npos) {
+        if (ping.find("SEND DATA") == std::string::npos)
+        {
             std::cerr << "Unexpected ping message: " << ping << std::endl;
             close(sock);
             continue;
@@ -92,22 +98,27 @@ void startTCPClient() {
         message += formatFloat(latest_orientation[2], 9, 4);
         pose_mutex.unlock();
 
-        while (message.size() < 60) message += ' ';
+        while (message.size() < 60)
+            message += ' ';
 
         int checksum = computeChecksum(message);
-        if (checksum < 10) message += "00";
-        else if (checksum < 100) message += "0";
+        if (checksum < 10)
+            message += "00";
+        else if (checksum < 100)
+            message += "0";
         message += std::to_string(checksum);
         message += "#";
 
-        while (message.size() < 64) message += ' ';
+        while (message.size() < 64)
+            message += ' ';
 
         std::cout << "Sending message (\"" << message << "\")" << std::endl;
         send(sock, message.c_str(), MESSAGE_SIZE, 0);
 
         memset(recv_buffer, 0, sizeof(recv_buffer));
         n = recv(sock, recv_buffer, 10, 0);
-        if (n > 0) std::cout << "Ack: " << std::string(recv_buffer, n) << std::endl;
+        if (n > 0)
+            std::cout << "Ack: " << std::string(recv_buffer, n) << std::endl;
 
         close(sock);
         sleep(1);
@@ -159,7 +170,7 @@ bool HatchDetectorApp::initialize()
 
 void HatchDetectorApp::loadTemplates()
 {
-    std::string base_path = PROJECT_SOURCE_DIR;  // Defined by CMake
+    std::string base_path = PROJECT_SOURCE_DIR; // Defined by CMake
 
     fs::path template_path_1 = fs::path(base_path) / "data" / "templates" / "hatch_view1.png";
     fs::path template_path_2 = fs::path(base_path) / "data" / "templates" / "hatch_view2.png";
@@ -684,4 +695,14 @@ void HatchDetectorApp::detectHatches(cv::Mat &display_image, cv::Mat &original_i
             cv::putText(display_image, text, bbox.tl() + cv::Point(0, -10), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 255), 2);
         }
     }
+}
+
+// Helper: Fetch a 3D point from the point cloud with safety checks
+cv::Point3f HatchDetectorApp::fetch3DPoint(const sl::Mat &point_cloud, const cv::Point2f &pixel)
+{
+    sl::float4 pt;
+    point_cloud.getValue((int)pixel.x, (int)pixel.y, &pt);
+    if (std::isnan(pt.z) || pt.z <= 0.0f)
+        return cv::Point3f(NAN, NAN, NAN);
+    return cv::Point3f(pt.x, pt.y, pt.z);
 }

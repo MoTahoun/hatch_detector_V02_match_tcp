@@ -72,6 +72,9 @@ private:
     // Utility
     void draw3DAxes(cv::Mat &image, const cv::Point3d &centroid, const cv::Mat &eigen);
     void drawPoseText(cv::Mat &image, const cv::Rect &bbox, const cv::Point3d &centroid, const cv::Vec3d &euler);
+
+    // Modification for getting centroid by mid right & left edges
+    cv::Point3f fetch3DPoint(const sl::Mat &point_cloud, const cv::Point2f &pixel);
 };
 
 // Global TCP pose sharing
