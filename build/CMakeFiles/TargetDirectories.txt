@@ -1,3 +1,0 @@
-/workspace/hatch_detector_V02_match_tcp/build/CMakeFiles/hatch_detector.dir
-/workspace/hatch_detector_V02_match_tcp/build/CMakeFiles/edit_cache.dir
-/workspace/hatch_detector_V02_match_tcp/build/CMakeFiles/rebuild_cache.dir
