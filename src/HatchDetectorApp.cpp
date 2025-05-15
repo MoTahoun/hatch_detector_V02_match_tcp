@@ -315,6 +315,18 @@ void HatchDetectorApp::matchTemplates(const cv::Mat &gray_image, cv::Mat &displa
 
         cv::Point3d center_3D = 0.5 * (cv::Point3d(left_3D) + cv::Point3d(right_3D));
 
+        // Debug: Print and display depth info
+        float left_depth = std::sqrt(left_3D.x * left_3D.x + left_3D.y * left_3D.y + left_3D.z * left_3D.z);
+        float right_depth = std::sqrt(right_3D.x * right_3D.x + right_3D.y * right_3D.y + right_3D.z * right_3D.z);
+        std::cout << "Left Midpoint Depth: " << left_depth << " m" << std::endl;
+        std::cout << "Right Midpoint Depth: " << right_depth << " m" << std::endl;
+
+        char left_text[64], right_text[64];
+        snprintf(left_text, sizeof(left_text), "Left Z: %.3f", left_3D.z);
+        snprintf(right_text, sizeof(right_text), "Right Z: %.3f", right_3D.z);
+        cv::putText(display_image, left_text, left_mid + cv::Point2f(10, -10), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0), 1);
+        cv::putText(display_image, right_text, right_mid + cv::Point2f(10, -10), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0), 1);
+
         /**************************************************************/
 
         // Compute orientation from 3D shape
