@@ -745,3 +745,26 @@ cv::Point3f HatchDetectorApp::fetch3DPoint(const sl::Mat &point_cloud, const cv:
         return cv::Point3f(NAN, NAN, NAN);
     return cv::Point3f(pt.x, pt.y, pt.z);
 }
+
+// Helper: Sample 3D points along the projected hatch borders for cleaner PCA orientation
+std::vector<cv::Point3f> HatchDetectorApp::extractBorder3DPoints(const sl::Mat &point_cloud, const std::vector<cv::Point2f> &projected)
+{
+    std::vector<cv::Point3f> edge_points;
+    const int num_samples = 50; // Number of samples per edge
+
+    for (int i = 0; i < 4; ++i)
+    {
+        cv::Point2f p1 = projected[i];
+        cv::Point2f p2 = projected[(i + 1) % 4];
+
+        for (int j = 0; j <= num_samples; ++j)
+        {
+            float alpha = static_cast<float>(j) / num_samples;
+            cv::Point2f pt = (1.0f - alpha) * p1 + alpha * p2;
+            cv::Point3f pt3D = fetch3DPoint(point_cloud, pt);
+            if (!std::isnan(pt3D.z))
+                edge_points.push_back(pt3D);
+        }
+    }
+    return edge_points;
+}

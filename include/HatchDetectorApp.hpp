@@ -75,6 +75,7 @@ private:
 
     // Modification for getting centroid by mid right & left edges
     cv::Point3f fetch3DPoint(const sl::Mat &point_cloud, const cv::Point2f &pixel);
+    std::vector<cv::Point3f> extractBorder3DPoints(const sl::Mat &point_cloud, const std::vector<cv::Point2f> &projected);
 };
 
 // Global TCP pose sharing
