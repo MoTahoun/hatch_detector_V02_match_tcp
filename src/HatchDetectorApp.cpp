@@ -234,6 +234,7 @@ void HatchDetectorApp::run()
     }
 }
 
+// Match ORB template and compute 6D pose using side-midpoints as 3D center
 void HatchDetectorApp::matchTemplates(const cv::Mat &gray_image, cv::Mat &display_image, const sl::Mat &point_cloud)
 {
     std::vector<cv::KeyPoint> frame_kp;
@@ -287,29 +288,51 @@ void HatchDetectorApp::matchTemplates(const cv::Mat &gray_image, cv::Mat &displa
             continue;
         }
 
-        std::vector<cv::Point2f> corners = {{0, 0}, {(float)tpl.image.cols, 0}, {(float)tpl.image.cols, (float)tpl.image.rows}, {0, (float)tpl.image.rows}};
+        std::vector<cv::Point2f> corners = {
+            {0, 0},
+            {(float)tpl.image.cols, 0},
+            {(float)tpl.image.cols, (float)tpl.image.rows},
+            {0, (float)tpl.image.rows}};
         std::vector<cv::Point2f> projected;
         cv::perspectiveTransform(corners, projected, H);
+
         for (int j = 0; j < 4; ++j)
         {
             cv::line(display_image, projected[j], projected[(j + 1) % 4], cv::Scalar(255, 0, 0), 2);
         }
 
+        /**************************************************************/
+
+        // Compute side midpoint-based centroid
+        cv::Point2f left_mid = 0.5f * (projected[0] + projected[3]);
+        cv::Point2f right_mid = 0.5f * (projected[1] + projected[2]);
+
+        cv::Point3f left_3D = fetch3DPoint(point_cloud, left_mid);
+        cv::Point3f right_3D = fetch3DPoint(point_cloud, right_mid);
+
+        if (std::isnan(left_3D.z) || std::isnan(right_3D.z))
+            continue;
+
+        cv::Point3d center_3D = 0.5 * (cv::Point3d(left_3D) + cv::Point3d(right_3D));
+
+        /**************************************************************/
+
+        // Compute orientation from 3D shape
         cv::Rect bbox = cv::boundingRect(projected);
         auto valid3D = extract3DPoints(point_cloud, bbox);
-        cv::Point3d centroid;
+        // cv::Point3d centroid;
         cv::Vec3d euler;
         cv::Mat eigen;
-        if (computePCAOrientation(valid3D, centroid, euler, &eigen))
+        if (computePCAOrientation(valid3D, center_3D, euler, &eigen))
         {
-            applyTemporalSmoothing(centroid, euler);
+            applyTemporalSmoothing(center_3D, euler);
             {
                 std::lock_guard<std::mutex> lock(pose_mutex);
-                latest_position = centroid;
+                latest_position = center_3D;
                 latest_orientation = euler;
             }
-            draw3DAxes(display_image, centroid, eigen);
-            drawPoseText(display_image, bbox, centroid, euler);
+            draw3DAxes(display_image, center_3D, eigen);
+            drawPoseText(display_image, bbox, center_3D, euler);
         }
         best_match_count = good.size();
         matched_template_name = "Template " + std::to_string(i + 1);
