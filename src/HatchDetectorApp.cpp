@@ -336,10 +336,10 @@ void HatchDetectorApp::matchTemplates(const cv::Mat &gray_image, cv::Mat &displa
         // Compute orientation from 3D shape
         cv::Rect bbox = cv::boundingRect(projected);
         auto valid3D = extract3DPoints(point_cloud, bbox);
-        // cv::Point3d centroid;
+        cv::Point3d tmpCentroid;
         cv::Vec3d euler;
         cv::Mat eigen;
-        if (computePCAOrientation(valid3D, center_3D, euler, &eigen))
+        if (computePCAOrientation(valid3D, tmpCentroid, euler, &eigen))
         {
             applyTemporalSmoothing(center_3D, euler);
             {
